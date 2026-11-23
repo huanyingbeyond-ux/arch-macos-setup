@@ -36,6 +36,7 @@
 - [16. 文件路径速查表](#16-文件路径速查表)
 - [17. 一键校验脚本](#17-一键校验脚本)
 - [18. 踩过的坑与经验教训](#18-踩过的坑与经验教训)
+- [19. macOS 风格通用顶栏：global-menu-KDE + 中文翻译](#19-macos-风格通用顶栏global-menu-kde--中文翻译)
 
 ---
 
@@ -703,6 +704,90 @@ echo "== GitHub =="; gh auth status 2>&1 | head -3
 **其他**
 - Xwayland + 全局菜单（appmenu-gtk-module）与 Wayland layer-shell 协议冲突，单进程不可兼得——做桌面底层小组件和带全局菜单的窗口需要两个协作进程 + D-Bus。
 - "打不开 DSH" 可能是"假叫醒"：D-Bus 名还在但窗口没映射，用 X 的 `_NET_CLIENT_LIST` + `WM_CLASS` 判断比信任 `Activate` 返回值可靠。
+
+---
+
+## 19. macOS 风格通用顶栏：global-menu-KDE + 中文翻译
+
+macOS 的桌面本身是 Finder 的一部分，所以即使在桌面也有 `File / Edit / View / Window / Help` 顶端菜单。KDE Plasma 自带的全局菜单 applet（`org.kde.plasma.appmenu`）只在有兼容应用窗口时显示菜单，**无窗口的桌面状态下没有通用菜单**。本节用 `global-menu-KDE` 补上这一块，并附完整简体中文翻译。
+
+### 目标效果
+
+| Plasma 状态 | 顶栏显示 |
+|---|---|
+| 桌面 / 无窗口 | `文件 / 编辑 / 查看 / 前往 / 工具 / 设置 / 帮助` 通用菜单 |
+| Dolphin、Kate 等兼容应用激活 | 自动切到该应用真实菜单 |
+| 应用关闭 | 自动切回桌面通用菜单 |
+
+它**不新建第二条面板**，而是作为一个普通 Plasmoid 放进你现有的顶栏。
+
+### 与其他 appmenu 的关系（不互斥）
+
+| 组件 | 说明 |
+|---|---|
+| `org.kde.plasma.appmenu` | KDE 原生全局菜单，你面板上已有一个（Containment 339 / Applet 343） |
+| `com.github.uselessfire.application-title-bar-appmenu` | 第三方标题栏 appmenu，已装未启用 |
+| `org.chathuranga.globalmenu` | 本节新装的插件 |
+
+三者都是 D-Bus `com.canonical.AppMenu.Registrar` 的**消费者**，不抢服务、不冲突。但功能重叠，**面板上只放一个**——确认新菜单可用后，把原生 appmenu 从面板移除即可，随时可换回。
+
+### 环境与前置条件（已在本机核实）
+
+- Plasma ≥ 6.5（本机 6.8.2）、Qt ≥ 6.6、KF6 ≥ 6.0、`LibTaskManager` 开发文件齐全。
+- 构建工具：`git cmake ninja c++ ctest msgfmt ldd`；依赖包 `qt6-base qt6-declarative kconfig ki18n kwindowsystem libplasma plasma-workspace dbus extra-cmake-modules gettext base-devel`。
+- 本机缺 `ninja` 和 `extra-cmake-modules`——**不要直接跑官方 `install.sh`**，它默认执行 `pacman -Syu` 会触发全系统升级。
+
+### 安装（一键，规避四个坑）
+
+```bash
+cd ~/WorkBuddy/2026-11-09-14-03-20/arch-macos-setup
+bash scripts/install-global-menu-kde.sh
+```
+
+脚本做了四件事：
+1. `sudo -v` 激活缓存，**只需输一次密码**；
+2. `pacman -S --needed` **不带 `-y`**，只补缺失依赖，不全系统升级；
+3. 把 `TMPDIR` 指到源码目录——本机 `/tmp` 只有 10MB，直接编译会失败；
+4. 调用官方 `install-system.sh` 编译 + CTest + 装到 `/usr`，最后自动装中文翻译。
+
+如只想单独装中文翻译（比如上游已装、或重装系统后恢复）：
+
+```bash
+bash scripts/install-global-menu-zh.sh
+```
+
+### 验证
+
+```bash
+# 插件是否就位
+ls -l /usr/lib/qt6/plugins/plasma/applets/org.chathuranga.globalmenu.so
+
+# 中文翻译是否就位
+ls -l ~/.local/share/locale/zh_CN/LC_MESSAGES/plasma_applet_org.chathuranga.globalmenu.mo
+msgunfmt ~/.local/share/locale/zh_CN/LC_MESSAGES/plasma_applet_org.chathuranga.globalmenu.mo | grep -A1 '&File'
+
+# 系统语言环境
+locale | grep LANG
+```
+
+插件安装脚本**不自动改面板配置**，桌面上的四个 AI 小组件、系统托盘、天气组件全部原样保留。装完需**退出并重新登录 Plasma 一次**，然后：编辑模式 → 添加小组件 → 搜索 `KDE Global Menu` → 拖入顶栏。
+
+### 中文翻译
+
+- 翻译源文件：`extras/global-menu-kde/po/zh_CN/plasma_applet_org.chathuranga.globalmenu.po`（92 条，含加速键 `文件(&F)` 形式）。
+- 采用 KDE 标准 gettext 机制，**无需 sudo、无需重编译**——gettext 从 `~/.local/share/locale` 加载用户翻译。系统 locale 为 `zh_CN.UTF-8` 即可生效。
+- 上游 PR：https://github.com/ChathurangaBW/global-menu-KDE/pull/19 （纯翻译，不改 C++/QML/CMake；合并后上游构建会自动用 `ki18n_install(po)` 打包中文 `.mo`）。
+- 上游项目：https://github.com/ChathurangaBW/global-menu-KDE
+
+### 回滚
+
+```bash
+global-menu-kde-uninstall       # 按 /var/lib/global-menu-kde/install_manifest.txt 精确删除
+rm -f ~/.local/share/locale/zh_CN/LC_MESSAGES/plasma_applet_org.chathuranga.globalmenu.mo
+# 然后退出重新登录 Plasma
+```
+
+原生 appmenu 是 KDE 自带组件，无需也不能卸载——把它从面板移除即可恢复原状。
 
 ---
 
