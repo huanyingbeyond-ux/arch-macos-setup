@@ -1,0 +1,26 @@
+[Unit]
+Description=DeepSeek Harness web service (localhost:3080)
+Documentation=https://github.com/deepseek-ai
+After=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+# 日志固定写这个文件：dsh-native 靠它抓带 token 的 URL
+StandardOutput=append:%h/.local/state/dsh-app/web.log
+StandardError=append:%h/.local/state/dsh-app/web.log
+ExecStartPre=/bin/sh -c 'mkdir -p %h/.local/state/dsh-app && : > %h/.local/state/dsh-app/web.log && rm -f %h/.local/state/dsh-app/url'
+ExecStart=%h/.local/bin/dsh web --no-open --port 3080
+# 2026-11-09: 原 Restart=on-failure 在 dsh web 启动失败时形成无限重启循环
+# (本次启动实测重启 1130 次，每轮约 26 CPU 秒 / 1.1G 内存，导致输入事件排队卡顿)。
+# 改为失败后不再自动重启；需要时手动 systemctl --user start dsh-web.service。
+Restart=no
+RestartSec=2
+# 本地服务绝不能被系统代理劫持
+UnsetEnvironment=http_proxy https_proxy HTTP_PROXY HTTPS_PROXY all_proxy ALL_PROXY
+# 常驻但空闲时别抢 CPU
+Nice=5
+IOSchedulingClass=idle
+
+[Install]
+WantedBy=default.target

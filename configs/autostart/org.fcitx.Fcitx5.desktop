@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Fcitx 5 (disabled: launched by KWin on Wayland)
+# Plasma Wayland 要求输入法进程由 KWin 启动（kwinrc: InputMethod）。
+# /etc/xdg/autostart/org.fcitx.Fcitx5.desktop 会额外拉起第二个实例，
+# 造成 "Unable to request dbus name" 并卸载全部 addon。
+# 用户级同名文件覆盖系统级，Hidden=true 即禁用该多余实例。
+Hidden=true

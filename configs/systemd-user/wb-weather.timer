@@ -1,0 +1,11 @@
+[Unit]
+Description=Refresh local weather cache every 30 minutes
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=30min
+Persistent=true
+Unit=wb-weather.service
+
+[Install]
+WantedBy=timers.target

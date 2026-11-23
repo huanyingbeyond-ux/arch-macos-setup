@@ -1,0 +1,19 @@
+[Unit]
+Description=DSH desktop widget (local session data, low CPU)
+After=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+Environment=GDK_BACKEND=wayland
+Environment=WAYLAND_DISPLAY=wayland-1
+Environment=XDG_RUNTIME_DIR=/run/user/1000
+Environment=DRI_PRIME=0
+ExecStart=/home/dean/.local/opt/dsh-widget/dsh-widget-poc --anchor=right --margin=40
+Restart=on-failure
+RestartSec=5
+Nice=10
+IOSchedulingClass=idle
+
+[Install]
+WantedBy=default.target

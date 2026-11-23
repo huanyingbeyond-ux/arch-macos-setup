@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE khotkeys SYSTEM "khotkeys.dtd">
+<khotkeys config_version="2" version="2">
+  <actionlist name="Dolphin Quick Look" comment="在 Dolphin 中按空格预览选中文件">
+    <action name="dolphin_quicklook" comment="Quick Look 预览">
+      <trigger>
+        <keyboard shortcut="Space"/>
+      </trigger>
+      <action type="COMMAND">
+        <command url="/home/dean/.local/bin/dolphin-quicklook.sh"/>
+      </action>
+      <conditions>
+        <condition>
+          <type>WINDOW</type>
+          <windowclass>dolphin</windowclass>
+        </condition>
+      </conditions>
+    </action>
+  </actionlist>
+</khotkeys>

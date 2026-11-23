@@ -1,0 +1,7 @@
+[Unit]
+Description=Fetch Shenyang weather from Open-Meteo (direct, no proxy)
+Documentation=https://open-meteo.com/
+
+[Service]
+Type=oneshot
+ExecStart=/home/dean/.local/bin/wb-weather-fetch.sh

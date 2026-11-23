@@ -1,0 +1,8 @@
+[Unit]
+Description=Refresh WorkBuddy widget summary JSON (low CPU)
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /home/dean/.local/opt/dsh-widget/wb-summary.py
+Nice=10
+IOSchedulingClass=idle

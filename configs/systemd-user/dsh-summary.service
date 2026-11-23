@@ -1,0 +1,10 @@
+[Unit]
+Description=Refresh DSH widget summary JSON (low CPU)
+
+[Service]
+Type=oneshot
+ExecStart=/home/dean/.local/opt/dsh-widget/dsh-summary
+ExecStart=/home/dean/.local/opt/dsh-widget/dsh-usage.py
+ExecStart=/home/dean/.local/opt/dsh-widget/wb-usage.py
+Nice=10
+IOSchedulingClass=idle

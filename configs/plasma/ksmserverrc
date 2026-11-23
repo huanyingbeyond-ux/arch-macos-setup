@@ -1,0 +1,5 @@
+[General]
+loginMode=default
+
+[Session: saved at previous logout]
+count=0

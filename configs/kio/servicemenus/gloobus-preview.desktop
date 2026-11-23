@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Service
+ServiceTypes=KonqPopupMenu/Plugin
+X-KDE-ServiceTypes=KonqPopupMenu/Plugin
+MimeType=all/all;
+Actions=quicklook
+
+[Desktop Action quicklook]
+Name=预览 (Quick Look)
+Icon=view-preview
+Exec=/home/dean/.local/bin/dolphin-quicklook.sh %U
